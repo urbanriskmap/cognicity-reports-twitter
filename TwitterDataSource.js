@@ -25,7 +25,7 @@ var TwitterDataSource = function TwitterDataSource(
 	this.config = config;
 
 	BaseTwitterDataSource.call(this, reports, twitter);
-	
+
 	// Create a list of keywords and usernames from config
 	this.config.twitter.keywords = this.config.twitter.track.split(',');
 	this.config.twitter.usernames = this.config.twitter.users.split(',');
@@ -55,7 +55,7 @@ TwitterDataSource.prototype.start = function(){
 
 		if (self.config.twitter.stream === true) {
 			self.twitter.stream( 'statuses/filter', {
-					'locations': self.config.twitter.bbox, 
+					'locations': self.config.twitter.bbox,
 					'track': self.config.twitter.track
 				}, function(stream){
 					stream.on('data', function (data){
@@ -65,7 +65,7 @@ TwitterDataSource.prototype.start = function(){
 						if (data.disconnect) {
 							self.logger.error( 'disconnect code:' + JSON.stringify(data.disconnect.code) );
 						} else {
-							self.filter(data);					
+							self.filter(data);
 							time = new Date().getTime(); // Updated the time with last tweet.
 						}
 					});
@@ -127,16 +127,16 @@ TwitterDataSource.prototype.start = function(){
  */
 TwitterDataSource.prototype.filter = function(tweet) {
 	var self = this;
-	
+
 	function generateInsertInviteeCallback(tweet) {
 		return function() {
 			self.insertInvitee(tweet);
 		};
 	}
-	
+
 	self.logger.silly("Processing tweet:");
 	self.logger.silly(JSON.stringify(tweet));
-	
+
 	// Retweet handling
 	if ( tweet.retweeted_status ) {
 		// Catch tweets from authorised user to verification - handle verification and then continue processing the tweet
@@ -148,69 +148,57 @@ TwitterDataSource.prototype.filter = function(tweet) {
 			return;
 		}
 	}
-	
+
 	// Keyword check
 	for (var i=0; i<self.config.twitter.keywords.length; i++){
 		var re = new RegExp(self.config.twitter.keywords[i], "gi");
 		if (tweet.text.match(re)){
 			self.logger.silly("Tweet matches keyword: " + self.config.twitter.keywords[i]);
-			
+
 			// Username check
 			for (var j=0; i<self.config.twitter.usernames.length; j++){
 				var userRegex = new RegExp(self.config.twitter.usernames[j], "gi");
 				if ( tweet.text.match(userRegex) ) {
 					self.logger.silly("Tweet matches username: " + self.config.twitter.usernames[j]);
-					
-					// regexp for city
-					var cityRegex = new RegExp(self.config.twitter.city, "gi");
-					
-					// Geo check
-					if ( tweet.coordinates !== null ){
-						self.logger.silly("Tweet has coordinates, confirmed report");
-						
-						self.insertConfirmed(tweet); //user + geo = confirmed report!
-						
-					} else if(tweet.place !== null && tweet.place.name.match(cityRegex) || tweet.user.location !== null && tweet.user.location.match(cityRegex)){
-						self.logger.silly("Tweet matches city or location: " + self.config.twitter.city);
-						
-						// City location check
-						self.insertNonSpatial( tweet ); // User sent us a message but no geo, log as such
-						self._sendReplyTweet( tweet, self._getMessage('thanks_text', tweet) ); // send geo reminder
-					}
+
+					bot.parse(tweet.text, function(result){
+						self._sendReplyTweet(tweet, result)
+					});
 					return;
-					
-				} else if ( j === self.config.twitter.usernames.length-1 ) {
+
+				} /* -- no automated tweet replying at the current time
+					else if ( j === self.config.twitter.usernames.length-1 ) {
 					self.logger.silly("Tweet does not match any usernames");
 					// End of usernames list, no match so message is unconfirmed
-					
+
 					// Geo check
 					if ( tweet.coordinates !== null ) {
 						self.logger.silly("Tweet has coordinates - unconfirmed report, invite user");
-						
+
 						self.insertUnConfirmed(tweet); // insert unconfirmed report, then invite the user to participate
 						self._sendReplyTweet(
-							tweet, 
-							self._getMessage('invite_text', tweet), 
-							generateInsertInviteeCallback(tweet)
-						);	
-						
-					} else {
-						self.logger.silly("Tweet has no geo data - keyword was present, invite user");
-						
-						// no geo, no user - but keyword so send invite
-						self._sendReplyTweet(
-							tweet, 
-							self._getMessage('invite_text', tweet), 
+							tweet,
+							self._getMessage('invite_text', tweet),
 							generateInsertInviteeCallback(tweet)
 						);
-					}
-					
+
+					} else {
+						self.logger.silly("Tweet has no geo data - keyword was present, invite user");
+
+						// no geo, no user - but keyword so send invite
+						self._sendReplyTweet(
+							tweet,
+							self._getMessage('invite_text', tweet),
+							generateInsertInviteeCallback(tweet)
+						);
+					}*/
+
 					return;
-				}	
+				}
 			}
 		}
 	}
-	
+
 	self.logger.silly("Tweet processing ended without calling any actions");
 };
 
@@ -233,18 +221,18 @@ TwitterDataSource.prototype._getMessage = function(code, tweet) {
  */
 TwitterDataSource.prototype.insertConfirmed = function(tweet) {
 	var self = this;
-	
+
 	self._baseInsertConfirmed(
-		tweet.user.screen_name, 
-		self._parseLangsFromTweet(tweet), 
-		tweet.id_str, 
-		self._twitterDateToIso8601(tweet.created_at), 
-		tweet.text, 
-		JSON.stringify(tweet.entities.hashtags), 
-		JSON.stringify(tweet.entities.urls), 
-		JSON.stringify(tweet.entities.user_mentions), 
-		tweet.lang, 
-		"", 
+		tweet.user.screen_name,
+		self._parseLangsFromTweet(tweet),
+		tweet.id_str,
+		self._twitterDateToIso8601(tweet.created_at),
+		tweet.text,
+		JSON.stringify(tweet.entities.hashtags),
+		JSON.stringify(tweet.entities.urls),
+		JSON.stringify(tweet.entities.user_mentions),
+		tweet.lang,
+		"",
 		tweet.coordinates.coordinates[0]+" "+tweet.coordinates.coordinates[1]
 	);
 };
@@ -255,7 +243,7 @@ TwitterDataSource.prototype.insertConfirmed = function(tweet) {
  */
 TwitterDataSource.prototype.insertInvitee = function(tweet) {
 	var self = this;
-	
+
 	self._baseInsertInvitee(tweet.user.screen_name);
 };
 
@@ -298,11 +286,11 @@ TwitterDataSource.prototype.insertNonSpatial = function(tweet) {
  */
 TwitterDataSource.prototype._sendReplyTweet = function(tweet, message, success) {
 	var self = this;
-	
+
 	self._baseSendReplyTweet(
-		tweet.user.screen_name, 
-		tweet.id_str, 
-		message, 
+		tweet.user.screen_name,
+		tweet.id_str,
+		message,
 		success
 	);
 };
@@ -323,9 +311,9 @@ TwitterDataSource.prototype._twitterDateToIso8601 = function(twitterDate) {
 TwitterDataSource.prototype._parseLangsFromTweet = function(tweet) {
 	// Fetch the language codes from twitter data, if present
 	var langs = [];
-	
+
 	if (tweet.lang) langs.push(tweet.lang);
-	
+
 	return langs;
 };
 
