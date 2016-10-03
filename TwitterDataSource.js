@@ -3,6 +3,13 @@
 // Prototype object this object extends from - contains basic twitter interaction functions
 var BaseTwitterDataSource = require('../BaseTwitterDataSource/BaseTwitterDataSource.js');
 
+// Require Bot library
+var Bot = require('../cognicity-grasp/Bot');
+var ReportCard = require('../cognicity-grasp/ReportCards');
+
+// Massive library
+var Massive = require('massive');
+
 // moment time library
 var moment = require('moment');
 
@@ -30,6 +37,12 @@ var TwitterDataSource = function TwitterDataSource(
 	this.config.twitter.keywords = this.config.twitter.track.split(',');
 	this.config.twitter.usernames = this.config.twitter.users.split(',');
 
+	// Associate Massive database connection
+	// To do - move this to base class?
+	// To do - add this from config
+	this.db = Massive.connectSync({db: "cognicity_grasp"});
+
+
 	// Set constructor reference (used to print the name of this data source)
 	this.constructor = TwitterDataSource;
 };
@@ -49,6 +62,9 @@ TwitterDataSource.prototype.config = {};
  */
 TwitterDataSource.prototype.start = function(){
 	var self = this;
+
+	var report_card = new ReportCard(self.db, self.logger);
+	var bot = new Bot(self.config.bot, self.db, self.logger);
 
 	// Stream
 	function connectStream(){
@@ -162,7 +178,7 @@ TwitterDataSource.prototype.filter = function(tweet) {
 					self.logger.silly("Tweet matches username: " + self.config.twitter.usernames[j]);
 
 					bot.parse(tweet.text, function(result){
-						self._sendReplyTweet(tweet, result)
+						self._sendReplyTweet(tweet, result);
 					});
 					return;
 
@@ -197,7 +213,7 @@ TwitterDataSource.prototype.filter = function(tweet) {
 				}
 			}
 		}
-	}
+	};
 
 	self.logger.silly("Tweet processing ended without calling any actions");
 };
