@@ -45,7 +45,7 @@ config.pg.table_nonspatial_users = 'nonspatial_tweet_users';
 
 //Twitter stream config
 config.twitter = {};
-config.twitter.stream = true; //Set to false to turn off twitter connection (for testing)
+config.twitter.stream = false; //Set to false to turn off twitter connection (for testing)
 
 //Twitter stream parameters
 config.twitter.send_enabled = false; //send verfication requests?
