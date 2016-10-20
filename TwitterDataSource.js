@@ -150,17 +150,8 @@ TwitterDataSource.prototype.filter = function(tweet) {
 	self.logger.silly("Processing tweet:");
 	self.logger.silly(JSON.stringify(tweet));
 
-	// Retweet handling
-	if ( tweet.retweeted_status ) {
-		// Catch tweets from authorised user to verification - handle verification and then continue processing the tweet
-		if ( tweet.user.screen_name === self.config.twitter.usernameVerify ) {
-			self._processVerifiedReport( tweet.retweeted_status.id_str );
-		} else {
-			// If this was a retweet but not from our verification user, ignore it and do no further processing
-			self.logger.debug( "filter: Ignoring retweet from user " + tweet.user.screen_name );
-			return;
-		}
-	}
+	//TODO should we respond to retweets the same as tweets?
+	// if (tweet.retweeted_status){};
 
 	// Keyword check
 	for (var i=0; i<self.config.twitter.keywords.length; i++){
