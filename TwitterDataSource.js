@@ -208,41 +208,6 @@ TwitterDataSource.prototype.filter = function(tweet) {
 };
 
 /**
- * Resolve message code from config.twitter using passed language codes.
- * Will fall back to trying to resolve message using default language set in configuration.
- * @param {string} code Message code to lookup in config.twitter
- * @param {Tweet} tweet The tweet object to fetch language code from
- * @returns {?string} Message text, or null if not resolved.
- */
-TwitterDataSource.prototype._getMessage = function(code, tweet) {
-	var self = this;
-
-	return self._baseGetMessage(code, self._parseLangsFromTweet(tweet) );
-};
-
-/**
- * Insert a confirmed tweet report into the database
- * @param {Tweet} tweet The tweet object insert confirmed report from
- */
-TwitterDataSource.prototype.insertConfirmed = function(tweet) {
-	var self = this;
-
-	self._baseInsertConfirmed(
-		tweet.user.screen_name,
-		self._parseLangsFromTweet(tweet),
-		tweet.id_str,
-		self._twitterDateToIso8601(tweet.created_at),
-		tweet.text,
-		JSON.stringify(tweet.entities.hashtags),
-		JSON.stringify(tweet.entities.urls),
-		JSON.stringify(tweet.entities.user_mentions),
-		tweet.lang,
-		"",
-		tweet.coordinates.coordinates[0]+" "+tweet.coordinates.coordinates[1]
-	);
-};
-
-/**
  * Insert an invited user into the database
  * @param {Tweet} tweet The tweet object insert invitee from
  */
@@ -250,37 +215,6 @@ TwitterDataSource.prototype.insertInvitee = function(tweet) {
 	var self = this;
 
 	self._baseInsertInvitee(tweet.user.screen_name);
-};
-
-/**
- * Insert an unconfirmed tweet report into the database
- * @param {Tweet} tweet The tweet object insert unconfirmed report from
- */
-TwitterDataSource.prototype.insertUnConfirmed = function(tweet) {
-	var self = this;
-
-	self._baseInsertUnConfirmed(
-		self._twitterDateToIso8601(tweet.created_at),
-	    tweet.coordinates.coordinates[0]+" "+tweet.coordinates.coordinates[1]
-	);
-};
-
-/**
- * Insert a non-spatial tweet report into the database
- * @param {Tweet} tweet The tweet object insert non-spatial report from
- */
-TwitterDataSource.prototype.insertNonSpatial = function(tweet) {
-	var self = this;
-
-	self._baseInsertNonSpatial(
-		tweet.user.screen_name,
-		self._twitterDateToIso8601(tweet.created_at),
-		tweet.text,
-		JSON.stringify(tweet.entities.hashtags),
-		JSON.stringify(tweet.entities.urls),
-		JSON.stringify(tweet.entities.user_mentions),
-		tweet.lang
-	);
 };
 
 /**
