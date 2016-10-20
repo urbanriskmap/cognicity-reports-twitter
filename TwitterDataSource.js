@@ -7,9 +7,6 @@ var BaseTwitterDataSource = require('../BaseTwitterDataSource/BaseTwitterDataSou
 var Bot = require('../cognicity-grasp/Bot');
 var ReportCard = require('../cognicity-grasp/ReportCards');
 
-// Massive library
-var Massive = require('massive');
-
 // moment time library
 var moment = require('moment');
 
@@ -176,40 +173,32 @@ TwitterDataSource.prototype.filter = function(tweet) {
 				var userRegex = new RegExp(self.config.twitter.usernames[j], "gi");
 				if ( tweet.text.match(userRegex) ) {
 					self.logger.silly("Tweet matches username: " + self.config.twitter.usernames[j]);
-
-					bot.parse(tweet.text, function(result){
-						self._sendReplyTweet(tweet, result);
+					// A confirmed input, ask Bot to scan for keywords and form response
+					bot.parseRequest(tweet.user, tweet.text, self._parseLangsFromTweet(tweet), function(err, message){
+						if (err){
+							self.logger.error('Error calling bot.parseRequest - no reply sent');
+						}
+						else {
+							self._sendReplyTweet(tweet, message);
+							return;
+						}
 					});
-					return;
-
-				} /* -- no automated tweet replying at the current time
+				}
 					else if ( j === self.config.twitter.usernames.length-1 ) {
-					self.logger.silly("Tweet does not match any usernames");
-					// End of usernames list, no match so message is unconfirmed
-
-					// Geo check
-					if ( tweet.coordinates !== null ) {
-						self.logger.silly("Tweet has coordinates - unconfirmed report, invite user");
-
-						self.insertUnConfirmed(tweet); // insert unconfirmed report, then invite the user to participate
-						self._sendReplyTweet(
-							tweet,
-							self._getMessage('invite_text', tweet),
-							generateInsertInviteeCallback(tweet)
-						);
-
-					} else {
-						self.logger.silly("Tweet has no geo data - keyword was present, invite user");
-
-						// no geo, no user - but keyword so send invite
-						self._sendReplyTweet(
-							tweet,
-							self._getMessage('invite_text', tweet),
-							generateInsertInviteeCallback(tweet)
-						);
-					}*/
-
-					return;
+						self.logger.silly("Tweet does not match any usernames");
+						// TODO - add unconfirmed user to database table to rate limit replies
+						// End of usernames list, no match so message is unconfirmed
+						// An unconfirmed input, ask bot to form ahoy response
+						bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet), function(err, message){
+							if (err){
+								self.logger.error('Error calling bot.ahoy - no reply sent');
+								return;
+							}
+							else {
+								self._sendReplyTweet(tweet, message);
+								return;
+							}
+						});
 				}
 			}
 		}
