@@ -7,6 +7,9 @@ var BaseTwitterDataSource = require('../BaseTwitterDataSource/BaseTwitterDataSou
 var Bot = require('../cognicity-grasp/Bot');
 var ReportCard = require('../cognicity-grasp/ReportCards');
 
+var grasp_config = require('../cognicity-grasp/sample-grasp-config');
+var dialogue = require('../cognicity-grasp/sample-bot-dialogue');
+
 // moment time library
 var moment = require('moment');
 
@@ -27,18 +30,17 @@ var TwitterDataSource = function TwitterDataSource(
 
 	// Store references to constructor arguments
 	this.config = config;
+	this.grasp_config = grasp_config;
+	this.dialogue = dialogue;
+
+	this.report_card = new ReportCard(this.grasp_config, this.reports.pg, this.logger);
+	this.bot = new Bot(this.grasp_config.bot, this.dialogue, this.report_card, this.logger);
 
 	BaseTwitterDataSource.call(this, reports, twitter);
 
 	// Create a list of keywords and usernames from config
 	this.config.twitter.keywords = this.config.twitter.track.split(',');
 	this.config.twitter.usernames = this.config.twitter.users.split(',');
-
-	// Associate Massive database connection
-	// To do - move this to base class?
-	// To do - add this from config
-	this.db = Massive.connectSync({db: "cognicity_grasp"});
-
 
 	// Set constructor reference (used to print the name of this data source)
 	this.constructor = TwitterDataSource;
@@ -59,9 +61,6 @@ TwitterDataSource.prototype.config = {};
  */
 TwitterDataSource.prototype.start = function(){
 	var self = this;
-
-	var report_card = new ReportCard(self.db, self.logger);
-	var bot = new Bot(self.config.bot, self.db, self.logger);
 
 	// Stream
 	function connectStream(){
@@ -141,10 +140,15 @@ TwitterDataSource.prototype.start = function(){
 TwitterDataSource.prototype.filter = function(tweet) {
 	var self = this;
 
-	function generateInsertInviteeCallback(tweet) {
-		return function() {
-			self.insertInvitee(tweet);
-		};
+	function botTweet(err, message){
+		if (err){
+			self.logger.error('Error calling bot.parseRequest - no reply sent');
+			return;
+		}
+		else {
+			self._sendReplyTweet(tweet, message);
+			return;
+		}
 	}
 
 	self.logger.silly("Processing tweet:");
@@ -165,35 +169,18 @@ TwitterDataSource.prototype.filter = function(tweet) {
 				if ( tweet.text.match(userRegex) ) {
 					self.logger.silly("Tweet matches username: " + self.config.twitter.usernames[j]);
 					// A confirmed input, ask Bot to scan for keywords and form response
-					bot.parseRequest(tweet.user, tweet.text, self._parseLangsFromTweet(tweet), function(err, message){
-						if (err){
-							self.logger.error('Error calling bot.parseRequest - no reply sent');
-						}
-						else {
-							self._sendReplyTweet(tweet, message);
-							return;
-						}
-					});
+					self.bot.parseRequest(tweet.user, tweet.text, self._parseLangsFromTweet(tweet), botTweet);
 				}
 					else if ( j === self.config.twitter.usernames.length-1 ) {
 						self.logger.silly("Tweet does not match any usernames");
 						// TODO - add unconfirmed user to database table to rate limit replies
 						// End of usernames list, no match so message is unconfirmed
 						// An unconfirmed input, ask bot to form ahoy response
-						bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet), function(err, message){
-							if (err){
-								self.logger.error('Error calling bot.ahoy - no reply sent');
-								return;
-							}
-							else {
-								self._sendReplyTweet(tweet, message);
-								return;
-							}
-						});
+						self.bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet), botTweet);
 				}
 			}
 		}
-	};
+	}
 
 	self.logger.silly("Tweet processing ended without calling any actions");
 };
