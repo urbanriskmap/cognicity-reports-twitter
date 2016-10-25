@@ -5,7 +5,7 @@ var BaseTwitterDataSource = require('../BaseTwitterDataSource/BaseTwitterDataSou
 
 // Require Bot library
 var Bot = require('../cognicity-grasp/Bot');
-var ReportCard = require('../cognicity-grasp/ReportCards');
+var ReportCard = require('../cognicity-grasp/ReportCard');
 
 var grasp_config = require('../cognicity-grasp/sample-grasp-config');
 var dialogue = require('../cognicity-grasp/sample-bot-dialogue');
@@ -33,8 +33,8 @@ var TwitterDataSource = function TwitterDataSource(
 	this.grasp_config = grasp_config;
 	this.dialogue = dialogue;
 
-	this.report_card = new ReportCard(this.grasp_config, this.reports.pg, this.logger);
-	this.bot = new Bot(this.grasp_config.bot, this.dialogue, this.report_card, this.logger);
+	this.report_card = new ReportCard(this.grasp_config, reports.pg, reports.logger);
+	this.bot = new Bot(this.grasp_config.bot, this.dialogue, this.report_card, reports.logger);
 
 	BaseTwitterDataSource.call(this, reports, twitter);
 
