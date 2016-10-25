@@ -62,6 +62,8 @@ TwitterDataSource.prototype.config = {};
 TwitterDataSource.prototype.start = function(){
 	var self = this;
 
+	//TODO Add bot.confirmed() to watch for incoming cards
+
 	// Stream
 	function connectStream(){
 
@@ -181,7 +183,6 @@ TwitterDataSource.prototype.filter = function(tweet) {
 			}
 		}
 	}
-
 	self.logger.silly("Tweet processing ended without calling any actions");
 };
 
