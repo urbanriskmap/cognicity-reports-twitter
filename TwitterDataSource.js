@@ -73,6 +73,7 @@ TwitterDataSource.prototype.start = function(){
 					'track': self.config.twitter.track
 				}, function(stream){
 					stream.on('data', function (data){
+						self.logger.info('stream has data');
 						if (data.warning) {
 							self.logger.warn( JSON.stringify(data.warning.code) + ':' + JSON.stringify(data.warning.message) );
 						}
@@ -163,27 +164,29 @@ TwitterDataSource.prototype.filter = function(tweet) {
 	for (var i=0; i<self.config.twitter.keywords.length; i++){
 		var re = new RegExp(self.config.twitter.keywords[i], "gi");
 		if (tweet.text.match(re)){
-			self.logger.silly("Tweet matches keyword: " + self.config.twitter.keywords[i]);
+			self.logger.debug("Tweet matches keyword: " + self.config.twitter.keywords[i]);
 
 			// Username check
 			for (var j=0; i<self.config.twitter.usernames.length; j++){
 				var userRegex = new RegExp(self.config.twitter.usernames[j], "gi");
 				if ( tweet.text.match(userRegex) ) {
-					self.logger.silly("Tweet matches username: " + self.config.twitter.usernames[j]);
+					self.logger.debug("Tweet matches username: " + self.config.twitter.usernames[j]);
 					// A confirmed input, ask Bot to scan for keywords and form response
 					self.bot.parseRequest(tweet.user, tweet.text, self._parseLangsFromTweet(tweet), botTweet);
+					return;
 				}
 					else if ( j === self.config.twitter.usernames.length-1 ) {
-						self.logger.silly("Tweet does not match any usernames");
+						self.logger.debug("Tweet does not match any usernames");
 						// TODO - add unconfirmed user to database table to rate limit replies
 						// End of usernames list, no match so message is unconfirmed
 						// An unconfirmed input, ask bot to form ahoy response
 						self.bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet), botTweet);
+						return;
 				}
 			}
 		}
 	}
-	self.logger.silly("Tweet processing ended without calling any actions");
+	self.logger.debug("Tweet processing ended without calling any actions");
 };
 
 /**
