@@ -172,7 +172,7 @@ TwitterDataSource.prototype.filter = function(tweet) {
 				if ( tweet.text.match(userRegex) ) {
 					self.logger.debug("Tweet matches username: " + self.config.twitter.usernames[j]);
 					// A confirmed input, ask Bot to scan for keywords and form response
-					self.bot.parseRequest(tweet.user, tweet.text, self._parseLangsFromTweet(tweet), botTweet);
+					self.bot.parseRequest(tweet.user.screen_name, tweet.text, self._parseLangsFromTweet(tweet)[0], botTweet);
 					return;
 				}
 					else if ( j === self.config.twitter.usernames.length-1 ) {
@@ -180,7 +180,7 @@ TwitterDataSource.prototype.filter = function(tweet) {
 						// TODO - add unconfirmed user to database table to rate limit replies
 						// End of usernames list, no match so message is unconfirmed
 						// An unconfirmed input, ask bot to form ahoy response
-						self.bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet), botTweet);
+						self.bot.ahoy(tweet.user, self._parseLangsFromTweet(tweet)[0], botTweet);
 						return;
 				}
 			}
