@@ -52,7 +52,7 @@ config.twitter.send_enabled = false; //send verfication requests?
 config.twitter.url_length = 0; // URLs no longer count as part of tweet limits so this should be 0
 
 config.twitter.bbox = '106.5894, -6.4354, 107.0782, -5.9029'; // Jakarta appx.
-config.twitter.track = 'flood, banjir'; //Twitter track keywords
+config.twitter.track = 'flood,banjir'; //Twitter track keywords
 config.twitter.users = '@petajkt'; //Verification twitter account
 config.twitter.timeout = 900000; //Default twitter stream timeout (milliseconds) 600000 (10 minutes)
 config.twitter.city = 'jakarta'; //User profile location keyword
