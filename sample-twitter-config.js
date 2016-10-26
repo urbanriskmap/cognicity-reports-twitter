@@ -25,12 +25,6 @@
  * @property {string} twitter.consumer_secret Take from the twitter dev admin interface
  * @property {string} twitter.access_token_key Take from the twitter dev admin interface
  * @property {string} twitter.access_token_secret Take from the twitter dev admin interface
- * @property {object} twitter.invite_text Object of twitter message texts mapping a language code to a message
- * @property {string} twitter.invite_text.(name) Language code to resolve
- * @property {string} twitter.invite_text.(value) Message to be tweeted
- * @property {object} twitter.thanks_text Object of twitter message texts mapping a language code to a message
- * @property {string} twitter.thanks_text.(name) Language code to resolve
- * @property {string} twitter.thanks_text.(value) Message to be tweeted
  * @property {boolean} twitter.addTimestamp If true, append a timestamp to each sent tweet
  */
 var config = {};
@@ -65,14 +59,6 @@ config.twitter.consumer_key = '';
 config.twitter.consumer_secret = '';
 config.twitter.access_token_key = '';
 config.twitter.access_token_secret = '';
-
-//Twitter message texts
-config.twitter.invite_text = {};
-config.twitter.invite_text.in = 'Invite/Verification Tweet Text [IN]';
-config.twitter.invite_text.en = 'Invite/Verification Tweet Text [EN]';
-config.twitter.thanks_text = {};
-config.twitter.thanks_text.in = 'Thanks/location-enabled reminder Tweet Text [IN]';
-config.twitter.thanks_text.en = 'Thanks/location-enabled reminder Tweet Text [EN]';
 
 //Append a timestamp to each sent tweet except response to confirmed reports with unique urls
 config.twitter.addTimestamp = true;
