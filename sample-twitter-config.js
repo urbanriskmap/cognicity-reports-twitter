@@ -4,12 +4,7 @@
  * Configuration for cognicity-reports-twitter
  * @namespace {object} config
  * @property {object} pg Postgres configuration object
- * @property {string} pg.table_all_users Postgres table name for all user records
- * @property {string} pg.table_tweets Postgres table name for tweet records
  * @property {string} pg.table_invitees Postgres table name for invited user records
- * @property {string} pg.table_unconfirmed Postgres table name for unconfirmed reports
- * @property {string} pg.table_nonspatial_tweet_reports Postgres table name for non-spatial tweet reports
- * @property {string} pg.table_nonspatial_users Postgres table name for non-spatial users
  * @property {object} twitter Configuration object for Twitter interface
  * @property {boolean} twitter.stream If true, connect to the twitter streaming API and retrieve tweets to process
  * @property {boolean} twitter.send_enabled If true, send tweets to users asking them to verify their reports
@@ -30,12 +25,7 @@
 var config = {};
 
 config.pg = {};
-config.pg.table_all_users = 'tweet_all_users';
-config.pg.table_tweets = 'tweet_reports';
-config.pg.table_invitees = 'tweet_invitees';
-config.pg.table_unconfirmed = 'tweet_reports_unconfirmed';
-config.pg.table_nonspatial_tweet_reports = 'nonspatial_tweet_reports';
-config.pg.table_nonspatial_users = 'nonspatial_tweet_users';
+config.pg.table_invitees = 'twitter.invitees';
 
 //Twitter stream config
 config.twitter = {};
