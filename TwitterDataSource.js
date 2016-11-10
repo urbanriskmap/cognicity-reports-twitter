@@ -26,8 +26,7 @@ var TwitterDataSource = function TwitterDataSource(
 
 	// Store references to constructor arguments
 	this.config = config;
-
-	this.bot = new Bot(this.config, reports.logger, reports.pg);
+	this.bot = Bot(reports.config, reports.logger, reports.pg);
 
 	BaseTwitterDataSource.call(this, reports, twitter);
 
