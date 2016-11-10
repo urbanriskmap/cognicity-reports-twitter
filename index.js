@@ -10,7 +10,7 @@
  */
 
 var TwitterDataSource = require('./TwitterDataSource');
-var config = require('./sample-twitter-config');
+var config = require('./local-twitter-config');
 
 // ntwitter twitter interface module
 var Twitter = require('ntwitter');
