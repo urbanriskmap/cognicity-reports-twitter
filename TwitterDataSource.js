@@ -3,8 +3,34 @@
 // Prototype object this object extends from - contains basic twitter interaction functions
 var BaseTwitterDataSource = require('../BaseTwitterDataSource/BaseTwitterDataSource.js');
 
-// Require Bot library
-var Bot = require('../cognicity-grasp/index.js');
+// Request module to call cognicity-server
+var request = require('request');
+
+// GRASP card
+var options = {
+  host: process.env.SERVER,
+  path: '/cards',
+  method: 'POST',
+  port: 80,
+  headers: {
+    'x-api-key': process.env.X_API_KEY,
+    'Content-Type': 'application/json'
+  }
+};
+
+// Information to be tweeted to the user
+var dialogue = {
+  ahoy: {
+    en: "Hello, I am RiskMapBot, reply with #flood to send me your flood report.",
+    id: "Halo, saya RiskMapBot. Untuk melaporkan banjir di sekitarmu, silakan balas dengan #banjir."
+  },
+  requests: {
+    card : {
+      en: 'Hi! Open this link to input flood location, flood description, & photos.',
+      id: 'Hai! Gunakan link ini untuk menginput lokasi banjir, keterangan, & foto.'
+    }
+  }
+};
 
 // moment time library
 var moment = require('moment');
@@ -26,7 +52,6 @@ var TwitterDataSource = function TwitterDataSource(
 
 	// Store references to constructor arguments
 	this.config = config;
-	this.bot = Bot(reports.config, reports.logger, reports.pg);
 
 	BaseTwitterDataSource.call(this, reports, twitter);
 
@@ -53,22 +78,6 @@ TwitterDataSource.prototype.config = {};
  */
 TwitterDataSource.prototype.start = function(){
 	var self = this;
-
-	//TODO Add bot.confirmed() to watch for incoming cards
-	function confirmReports(){
-	  self.bot.confirm(function(err, username, message){
-	      var tweet = {};
-	      tweet.id_str = null;
-	      tweet.user = {};
-	      tweet.user.screen_name = username;
-
-	      self._sendReplyTweet(tweet, message, function(){
-	        self.logger.debug("Sent recieved report confirmed message");
-	        return;
-	      });
-	  });
-	}
-
 
 	// Stream
 	function connectStream(){
@@ -132,7 +141,6 @@ TwitterDataSource.prototype.start = function(){
 	self.logger.info( 'stream started' );
 	connectStream();
 	forceStreamAlive();
-	confirmReports();
 };
 
 /**
@@ -152,7 +160,7 @@ TwitterDataSource.prototype.filter = function(tweet) {
 
 	function botTweet(err, message){
 		if (err){
-			self.logger.error('Error calling bot.parseRequest - no reply sent');
+			self.logger.error('Error calling parseRequest - no reply sent');
 		}
 		else {
 			self._sendReplyTweet(tweet, message);
@@ -160,14 +168,37 @@ TwitterDataSource.prototype.filter = function(tweet) {
 	}
 
 	function parseRequest(tweet){
-		self.bot.parseRequest(tweet.user.screen_name, tweet.text, self._parseLangsFromTweet(tweet)[0],
-			botTweet);
+		var username = tweet.user.screen_name;
+		var words = tweet.text;
+    var filter = words.match(/banjir|flood/gi);
+		var language = self._parseLangsFromTweet(tweet)[0];
+
+    if (filter){filter = filter[0];}
+
+    switch (filter){
+      case null:
+        self.logger.info('Bot could not detect request keyword');
+				self._ahoy(username, language, botTweet); //Respond with default
+				break;
+
+      case 'banjir':
+        self.logger.info('Bot detected request keyword "banjir"');
+        self._getCardLink(username, self.config.cognicity.network, language, botTweet);
+				break;
+
+      case 'flood':
+        self.logger.info('Bot detected request keyword "flood"');
+				self._getCardLink(username, self.config.cognicity.network, language, botTweet);
+				break;
+    }
 	}
 
 	function sendAhoy(tweet){
-		self._ifNewUser(tweet.user.screen_name, function(username_hash){
-			self.bot.ahoy(tweet.user.screen_name, self._parseLangsFromTweet(tweet)[0],
-				botTweet);
+		var username = tweet.user.screen_name;
+		var language = self._parseLangsFromTweet(tweet)[0];
+
+		self._ifNewUser(username, function(username_hash){
+			self._ahoy(username, language, botTweet); //Respond with default
 			self.insertInvitee(tweet);
 		});
 		return;
@@ -254,6 +285,55 @@ TwitterDataSource.prototype._parseLangsFromTweet = function(tweet) {
 	if (tweet.lang) langs.push(tweet.lang);
 
 	return langs;
+};
+
+/**
+ * Returns text to be tweeted to the user based on the dialogue type
+ * @param  {String} dialogue Dialogue Type (ahoy, requests.card)
+ * @param  {String} language Text string containing ISO 639-1 two letter language code e.g. 'en', 'id'
+ */
+TwitterDataSource.prototype._getDialogue = function(dialogue, language){
+	var self = this;
+	if (language in dialogue === false) {
+		language = self.config.twitter.defaultLanguage;
+	}
+	return (dialogue[language]);
+};
+
+TwitterDataSource.prototype._ahoy = function(username, language, callback){
+	var self = this;
+	callback(null, self._getDialogue(dialogue.ahoy, language));
+};
+
+TwitterDataSource.prototype._getCardLink = function(username, network, language, callback) {
+	var self = this;
+
+	var card_request = {"username": username,
+      								"network": network,
+											"language": language
+										};
+
+  // Get a card from Cognicity server
+  request({
+    url: options.host + options.path,
+    method: options.method,
+    headers: options.headers,
+    port: options.port,
+    json: true,
+    body: card_request
+  }, function(error, response, body){
+    if (!error && response.statusCode === 200){
+      self.logger.info('Fetched card id: ' + body.cardId);
+      // Construct the card link to be sent to the user
+      var cardLink = process.env.CARD_PATH + body.cardId + '/report';
+			var messageText =  self._getDialogue(dialogue.requests.card, language) + ' ' + cardLink;
+			callback(null, messageText);
+    } else {
+			var err = 'Error getting card: ' + JSON.stringify(error) + JSON.stringify(response);
+      self.logger.error(err);
+			callback(err, null);
+    }
+  });
 };
 
 // Export the TwitterDataSource constructor

@@ -36,21 +36,31 @@ config.twitter.send_enabled = false; //send verfication requests?
 config.twitter.url_length = 0; // URLs no longer count as part of tweet limits so this should be 0
 
 config.twitter.bbox = '106.5894, -6.4354, 107.0782, -5.9029'; // Jakarta appx.
-config.twitter.track = 'flood,banjir'; //Twitter track keywords
-config.twitter.users = '@petajkt'; //Verification twitter account
+config.twitter.track = 'flood'; //Twitter track keywords
+config.twitter.users = '@riskmaptrial'; //Verification twitter account
 config.twitter.timeout = 900000; //Default twitter stream timeout (milliseconds) 600000 (10 minutes)
-config.twitter.city = 'jakarta'; //User profile location keyword
+config.twitter.city = 'chennai'; //User profile location keyword
 
 config.twitter.usernameVerify = ''; // Twitter username (without @) authorised to verify reports via retweet functionality
 config.twitter.usernameReplyBlacklist = ''; // Twitter usernames (without @, comma separated for multiples) which will never be sent to in response to tweet processing
 
 //Twitter app authentication details
-config.twitter.consumer_key = '';
-config.twitter.consumer_secret = '';
-config.twitter.access_token_key = '';
-config.twitter.access_token_secret = '';
+config.twitter.consumer_key = process.env.TWITTER_CONSUMER_KEY;
+config.twitter.consumer_secret = process.env.TWITTER_CONSUMER_SECRET;
+config.twitter.access_token_key = process.env.TWITTER_ACCESS_TOKEN_KEY;
+config.twitter.access_token_secret = process.env.TWITTER_ACCESS_TOKEN_SECRET;
 
 //Append a timestamp to each sent tweet except response to confirmed reports with unique urls
 config.twitter.addTimestamp = true;
+
+// Twitter message texts
+// Note we use IN and ID because twitter and Gnip return different language codes for Indonesian
+// The messages should be no longer than 109 characters if timestamps are enabled, or 123 characters if timestamps are disabled
+config.twitter.defaultLanguage = 'id'; // The default language code to use if we can't resolve one from the tweet
+
+// Cognicity details
+config.cognicity.server = process.env.COGNICITY_SERVER; //'http://localhost:8001';
+config.cognicity.card_url_prefix = process.env.CARDS_PREFIX; //'http://localhost:9000/cards/flood/';
+config.cognicity.network = 'twitter';
 
 module.exports = config;

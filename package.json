@@ -7,8 +7,9 @@
   "private": true,
   "dependencies": {
     "moment": "^2.14.1",
-    "ntwitter": "^0.5.0",
-    "rsvp": "^3.2.1"
+    "request": "^2.81.0",
+    "rsvp": "^3.2.1",
+    "twitter": "^1.7.0"
   },
   "devDependencies": {
     "jsdoc": "^3.2.0",
