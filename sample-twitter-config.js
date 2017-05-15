@@ -37,7 +37,7 @@ config.twitter.url_length = 0; // URLs no longer count as part of tweet limits s
 
 config.twitter.bbox = '106.5894, -6.4354, 107.0782, -5.9029'; // Jakarta appx.
 config.twitter.track = 'flood'; //Twitter track keywords
-config.twitter.users = '@riskmaptrial'; //Verification twitter account
+config.twitter.users = '@riskmapindia'; //Verification twitter account
 config.twitter.timeout = 900000; //Default twitter stream timeout (milliseconds) 600000 (10 minutes)
 config.twitter.city = 'chennai'; //User profile location keyword
 
